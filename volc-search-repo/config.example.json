@@ -1,0 +1,6 @@
+{
+  "key_file": "key",
+  "endpoint": "https://open.feedcoopapi.com/search_api/web_search",
+  "default_count": 10,
+  "timeout": 30
+}
