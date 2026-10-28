@@ -1,25 +1,26 @@
 ---
 name: volc-search
-description: 用火山引擎（豆包搜索 Custom 版）联网搜索 API 代替默认 web_search。仅当用户明确要求「/volc-search」「用火山搜」「用豆包搜索」时才使用；默认情况下不要主动调用，也不要因为需要联网就自动切到本 skill。支持网页搜索、图片搜索、时间范围、权威来源过滤、站点限定、Query 改写。
+description: 用火山引擎（豆包搜索 Custom 版）联网搜索 API 代替默认 web_search。用户使用 /volc-search 前缀或明确说「用火山搜」「用火山引擎搜」「用豆包搜索」「走火山引擎」时必须先调用本 skill 搜索再作答。支持网页搜索、图片搜索、时间范围、权威来源过滤、站点限定、Query 改写。
 ---
 
 # volc-search — 火山引擎联网搜索
 
 用火山引擎「豆包搜索 Custom 版」的 HTTP 接口做联网搜索，返回网页或图片结果。
 
-## 触发条件（严格）
+## 触发规则
 
-**只在用户明确点名时才用**：
+### 用户点名时：必须搜索
 
-- 用户输入 `/volc-search ...`
-- 用户说「用火山搜」「用火山引擎搜」「用豆包搜索」「走火山引擎」
+用户出现以下任一表达，即视为强制调用本 skill：
 
-**不要自动使用**。以下情况仍走默认 `web_search`，即使明显需要联网：
+- `/volc-search ...`
+- 「用火山搜」「用火山引擎搜」「用豆包搜索」「走火山引擎」
 
-- 用户没点名本 skill
-- 用户只是普通提问、需要查资料、需要核实事实
+**此时先调用脚本查询，再回答。** 不管用户问的是事实、概念还是「能不能做」，都照此执行。
 
-换句话说：本 skill 是**显式点名才启用的替代通道**，不是全局默认搜索引擎。
+### 用户没点名时：不主动用
+
+没出现上述表达，就仍用默认 `web_search`，包括用户只是普通提问、需要查资料、需要核实事实的情况。
 
 ## 用法
 
@@ -32,12 +33,12 @@ python <skill目录>/scripts/volc_search.py "搜索词" [参数...]
 示例：
 
 ```
-python volc-search\scripts\volc_search.py "华为发布会 2026"
-python volc-search\scripts\volc_search.py "AI 芯片 出口管制" --time-range OneWeek --auth-level 1
-python volc-search\scripts\volc_search.py "某公司 财报" --sites eastmoney.com|cls.cn
-python volc-search\scripts\volc_search.py "小米 SU7" --type image --count 3
-python volc-search\scripts\volc_search.py "这个新出的框架好不好用" --query-rewrite
-python volc-search\scripts\volc_search.py "某事件 来龙去脉" --time-range 2025-01-01..2026-10-28
+python volc_search.py "华为发布会 2026"
+python volc_search.py "AI 芯片 出口管制" --time-range OneWeek --auth-level 1
+python volc_search.py "某公司 财报" --sites eastmoney.com|cls.cn
+python volc_search.py "小米 SU7" --type image --count 3
+python volc_search.py "这个新出的框架好不好用" --query-rewrite
+python volc_search.py "某事件 来龙去脉" --time-range 2025-01-01..2026-10-28
 ```
 
 ## 参数
@@ -96,15 +97,16 @@ python volc-search\scripts\volc_search.py "某事件 来龙去脉" --time-range 
 
 ```json
 {
-  "api_key": "在这里填 API Key",
+  "key_file": "key",
   "endpoint": "https://open.feedcoopapi.com/search_api/web_search",
   "default_count": 10,
   "timeout": 30
 }
 ```
 
-- `api_key`：火山引擎联网搜索控制台里的 API Key（**不是**方舟 Ark 的 Key，两者不通用）
-- 也支持环境变量 `WEB_SEARCH_API_KEY` 或 `VOLC_SEARCH_API_KEY`，优先级：`--api-key` > 环境变量 > `config.json`
-- 这个文件含密钥，**不要提交到任何仓库，不要贴到公开的地方**
+- `key_file`：指向存放 API Key 的纯文本文件名（相对 skill 根目录），文件里只放 Key 本身
+- 也支持环境变量 `WEB_SEARCH_API_KEY` 或 `VOLC_SEARCH_API_KEY`，优先级：`--api-key` > 环境变量 > key 文件 > `config.json` 的 `api_key` 字段
+- Key 必须是火山引擎「联网搜索」控制台的 API Key（**不是**方舟 Ark 的 Key，两者不通用）
+- 这些文件含密钥，**不要提交到任何仓库，不要贴到公开的地方**
 
 更多错误码、开通步骤见 `references/setup-guide.md`。
